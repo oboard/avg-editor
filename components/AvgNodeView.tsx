@@ -4,17 +4,17 @@ import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import {
   nodeAdded,
   nodeModify,
-  selectAvgNode,
+  selectAvgCanvas,
   selectLanguage,
 } from "@/stores/store";
 import { v1 } from "uuid";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type AvgNode from "@/models/avg_nodes";
+import clsx from "clsx";
 
-export default function AvgNodeView({ nodes, ...props }: { nodes?: AvgNode }) {
-  const globaNodes = useAppSelector(selectAvgNode);
+export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
+  const [editMode, setEditMode] = useState(true);
   const dispatch = useAppDispatch();
-  nodes ??= globaNodes;
-  // const lang = useAppSelector(selectLanguage);
 
   const textArea = useRef<HTMLTextAreaElement>(null);
 
@@ -28,98 +28,102 @@ export default function AvgNodeView({ nodes, ...props }: { nodes?: AvgNode }) {
   }
   refreshHeight();
 
+  useEffect(() => {
+    if (node) {
+      textArea.current?.focus();
+    }
+  }, [node]);
+
+  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+
   return (
-    <AnimatePresence {...props}>
-      <motion.div
-        className="flex flex-col"
-        initial={{ opacity: 0, filter: "blur(10px)", height: 0 }}
-        animate={{ opacity: 1, filter: "blur(0px)", height: "auto" }}
-        exit={{ opacity: 0 }}
-      >
-        {nodes && (
-          <div className="relative flex justify-center">
-            <textarea
-              ref={textArea}
-              className="textarea textarea-bordered w-64 focus-visible:outline-offset-0 rounded overflow-hidden resize-none"
-              onKeyUp={() => {
-                refreshHeight();
-              }}
-              value={nodes.content[lang]}
-              onChange={(e) => {
-                if (!nodes) return;
-                if (nodes.content[lang] !== e.target.value) {
-                  dispatch(
-                    nodeModify({
-                      id: nodes.id,
-                      content: {
-                        [lang]: e.target.value,
-                      },
-                    })
-                  );
-                }
-              }}
-            />
-            <div
-              className="absolute bottom-0 left-0 right-0 flex justify-center gap-2 text-xs text-base-content"
-              style={{ height: "24px" }}
-            >
-              <div>
-                <motion.button
-                  className="btn btn-circle"
-                  onClick={() => {
-                    // 记录现在浏览器横轴坐标
-
-                    const x = window.scrollX;
-                    dispatch(
-                      nodeAdded({
-                        id: v1(),
-                        text: "",
-                        type: "",
-                      })
-                    );
-                    // 还原
-
-                    window.scrollTo(x, window.scrollY);
-                  }}
-                >
-                  <Icon icon="mdi:add" width={24} />
-                </motion.button>
-              </div>
-            </div>
-          </div>
+    <motion.div
+      className="relative flex justify-center"
+      style={{
+        position: "absolute",
+        top: node?.y,
+        left: node?.x,
+      }}
+      onDoubleClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setEditMode(true);
+      }}
+      onBlur={() => {
+        setEditMode(false);
+      }}
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      {...props}
+    >
+      <textarea
+        ref={textArea}
+        readOnly={!editMode}
+        className={clsx(
+          "textarea textarea-bordered w-64 focus-visible:outline-offset-0 rounded overflow-hidden resize-none",
+          {
+            "cursor-grab": !editMode,
+          }
         )}
-        {nodes?.children.length !== 0 && (
-          <div className="w-0.5 h-4 m-2 bg-base-content bg-opacity-20 self-center" />
-        )}
-        <motion.div className="flex flex-row items-start gap-2">
-          {nodes?.children.map((child, index) => (
-            <AvgNodeView key={child.id} nodes={child} />
-          ))}
-        </motion.div>
-        {/* {nodes?.children.length === 0 && (
-          <div>
-            <motion.button
-              className="btn btn-ghost btn-circle"
-              onClick={() => {
-                dispatch(
-                  nodeAdded({
-                    id: v1(),
-                    content: {
-                      zh_CN: "",
-                      en_US: "",
-                    },
-                    children: [],
-                    parentId: nodes.id,
-                    type: "",
-                  })
-                );
-              }}
-            >
-              <Icon icon="mdi:add" width={24} />
-            </motion.button>
-          </div>
-        )} */}
-      </motion.div>
-    </AnimatePresence>
+        onMouseDown={(e) => {
+          if (e.buttons === 1 && node && !editMode) {
+            setMouseOffset({ x: e.clientX - node.x, y: e.clientY - node.y });
+            setIsDragging(true);
+          }
+        }}
+        onMouseUp={() => {
+          setIsDragging(false);
+        }}
+        onMouseLeave={() => {
+          setIsDragging(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && node && !editMode) {
+            e.preventDefault();
+            e.stopPropagation();
+            setEditMode(false);
+            dispatch(
+              nodeAdded({
+                id: v1(),
+                x: node.x,
+                y: node.y + 100,
+                text: "",
+                type: "",
+              })
+            );
+          }
+        }}
+        onMouseMove={(e) => {
+          if (e.buttons === 1 && node) {
+            if (isDragging) {
+              const deltaX = e.clientX - mouseOffset.x;
+              const deltaY = e.clientY - mouseOffset.y;
+              dispatch(
+                nodeModify({
+                  id: node.id,
+                  x: deltaX,
+                  y: deltaY,
+                })
+              );
+            }
+          }
+        }}
+        onKeyUp={() => {
+          refreshHeight();
+        }}
+        value={node?.text}
+        onChange={(e) => {
+          if (node) {
+            // node.text = e.target.value;
+            dispatch(nodeModify({ id: node.id, text: e.target.value }));
+          }
+        }}
+      />
+      {/* move */}
+      {/* <div className="absolute top-0 right-0 z-10">
+        <Icon icon="mdi:cursor-move" className="cursor-move" />
+      </div> */}
+    </motion.div>
   );
 }

@@ -1,5 +1,6 @@
-import type { AvgNode, I18nContent } from "@/app/page";
-
+import type { I18nContent } from "@/components/LanguageSelector";
+import type AVGCanvas from "@/models/avg_canvas";
+import type AvgNode from "@/models/avg_nodes";
 import {
   configureStore,
   type ThunkAction,
@@ -17,62 +18,21 @@ export type AppThunk<ReturnType = void> = ThunkAction<
   Action<string>
 >;
 
-const nodesSlice = createSlice({
+const canvasSlice = createSlice({
   name: "nodes",
   initialState: {
-    id: "root",
-    type: "root",
-    content: {
-      zh_CN: "根节点",
-      en_US: "Root Node",
-    },
-    children: [],
-    parentId: "",
-  } as AvgNode,
+    nodes: [],
+    edges: [],
+  } as AVGCanvas,
   reducers: {
     nodeModify(state, action) {
-      const { id, content } = action.payload;
-      function findNode(node: AvgNode): AvgNode | undefined {
-        if (node.id === id) {
-          return node;
-        }
-
-        for (const child of node.children) {
-          const result = findNode(child);
-          if (result) {
-            return result;
-          }
-        }
-
-        return undefined;
-      }
-
-      const node = findNode(state);
+      const node = state.nodes.find((n) => n.id === action.payload.id);
       if (node) {
-        node.content = Object.assign(node.content, content);
+        Object.assign(node, action.payload);
       }
     },
     nodeAdded(state, action: PayloadAction<AvgNode>) {
-      function findParent(node: AvgNode, id: string): AvgNode | undefined {
-        if (node.id === id) {
-          return node;
-        }
-
-        for (const child of node.children) {
-          const result = findParent(child, id);
-          if (result) {
-            return result;
-          }
-        }
-
-        return undefined;
-      }
-
-      const node = action.payload;
-      const parent = findParent(state, node.parentId);
-      if (parent) {
-        parent.children.push(node);
-      }
+      state.nodes.push(action.payload);
     },
   },
 });
@@ -89,14 +49,14 @@ const languageSlice = createSlice({
 
 export const store = configureStore({
   reducer: {
-    nodes: nodesSlice.reducer,
+    canvas: canvasSlice.reducer,
     language: languageSlice.reducer,
   },
 });
 
-export const selectAvgNode = (state: RootState) => state.nodes;
+export const selectAvgCanvas = (state: RootState) => state.canvas;
 export const selectLanguage = (state: RootState) => state.language.lang;
 
-export const { nodeModify, nodeAdded } = nodesSlice.actions;
+export const { nodeModify, nodeAdded } = canvasSlice.actions;
 export const { setLanguage } = languageSlice.actions;
-export default nodesSlice.reducer;
+export default canvasSlice.reducer;

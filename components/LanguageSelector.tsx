@@ -1,6 +1,10 @@
-import { I18nContent } from "@/app/page";
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import { selectLanguage, setLanguage } from "@/stores/store";
+
+export enum I18nContent {
+  zh_CN = "zh_CN",
+  en_US = "en_US",
+}
 
 export default function LanguageSelector() {
   const lang = useAppSelector(selectLanguage);
