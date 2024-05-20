@@ -1,4 +1,6 @@
+import daisyui from "daisyui";
 import type { Config } from "tailwindcss";
+import { addIconSelectors } from "@iconify/tailwind";
 
 const config: Config = {
   content: [
@@ -8,13 +10,16 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-      },
+      // backgroundImage: {
+      //   "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+      //   "gradient-conic":
+      //     "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      // },
     },
   },
-  plugins: [],
+  daisyui: {
+    themes: ["light", "dark", "cupcake"],
+  },
+  plugins: [daisyui, addIconSelectors(["mdi", "solar"])],
 };
 export default config;

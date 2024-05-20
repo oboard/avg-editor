@@ -9,16 +9,27 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@iconify-json/mdi": "^1.1.66",
+    "@iconify-json/solar": "^1.1.9",
+    "@iconify/react": "^4.1.1",
+    "@iconify/tailwind": "^1.1.1",
+    "@panzoom/panzoom": "^4.5.1",
+    "@reduxjs/toolkit": "^2.2.5",
+    "daisyui": "^4.11.1",
+    "framer-motion": "^11.2.4",
+    "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.3"
+    "react-redux": "^9.1.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/uuid": "^9.0.8",
     "postcss": "^8",
-    "tailwindcss": "^3.4.1"
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }
