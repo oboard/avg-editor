@@ -47,16 +47,34 @@ const languageSlice = createSlice({
   },
 });
 
+const selectionSlice = createSlice({
+  name: "selection",
+  initialState: { selected: [] as string[] },
+  reducers: {
+    select(state, action: PayloadAction<string[]>) {
+      state.selected.push(...action.payload);
+    },
+    deselect(state, action: PayloadAction<string[]>) {
+      state.selected = state.selected.filter(
+        (id) => !action.payload.includes(id)
+      );
+    },
+  },
+});
+
 export const store = configureStore({
   reducer: {
     canvas: canvasSlice.reducer,
+    selection: selectionSlice.reducer,
     language: languageSlice.reducer,
   },
 });
 
 export const selectAvgCanvas = (state: RootState) => state.canvas;
 export const selectLanguage = (state: RootState) => state.language.lang;
+export const selectSelected = (state: RootState) => state.selection.selected;
 
 export const { nodeModify, nodeAdded } = canvasSlice.actions;
+export const { select, deselect } = selectionSlice.actions;
 export const { setLanguage } = languageSlice.actions;
 export default canvasSlice.reducer;

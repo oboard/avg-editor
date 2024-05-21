@@ -44,6 +44,8 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
         position: "absolute",
         top: node?.y,
         left: node?.x,
+        width: node?.width,
+        height: node?.height,
       }}
       onDoubleClick={(e) => {
         e.preventDefault();
@@ -63,7 +65,7 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
         className={clsx(
           "textarea textarea-bordered w-64 focus-visible:outline-offset-0 rounded overflow-hidden resize-none",
           {
-            "cursor-grab": !editMode,
+            "cursor-grab select-none": !editMode,
           }
         )}
         onMouseDown={(e) => {
@@ -75,23 +77,35 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
         onMouseUp={() => {
           setIsDragging(false);
         }}
-        onMouseLeave={() => {
-          setIsDragging(false);
-        }}
+        // onMouseLeave={() => {
+        //   setIsDragging(false);
+        // }}
         onKeyDown={(e) => {
-          if (e.key === "Enter" && node && !editMode) {
-            e.preventDefault();
-            e.stopPropagation();
-            setEditMode(false);
-            dispatch(
-              nodeAdded({
-                id: v1(),
-                x: node.x,
-                y: node.y + 100,
-                text: "",
-                type: "",
-              })
-            );
+          if (node && !editMode) {
+            switch (e.key) {
+              case "Enter":
+                e.preventDefault();
+                e.stopPropagation();
+                setEditMode(false);
+                dispatch(
+                  nodeAdded({
+                    id: v1(),
+                    x: node.x,
+                    y: node.y + 100,
+                    text: "",
+                    type: "",
+                    height: 48,
+                    width: 128,
+                  })
+                );
+                break;
+              case "Escape":
+                e.preventDefault();
+                e.stopPropagation();
+                setEditMode(false);
+
+                break;
+            }
           }
         }}
         onMouseMove={(e) => {
