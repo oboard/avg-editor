@@ -2,12 +2,18 @@ import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import { nodeAdded, selectAvgCanvas, selectSelected } from "@/stores/store";
 import { v1 } from "uuid";
 import AvgNodeView from "./AvgNodeView";
-import type AvgEdge from "@/models/avg_edges";
+import { useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 export default function AvgCanvasView() {
   const data = useAppSelector(selectAvgCanvas);
   const selected = useAppSelector(selectSelected);
   const dispatch = useAppDispatch();
+  const [transform, setTransform] = useState({
+    x: 0,
+    y: 0,
+    scale: 1,
+  });
 
   function getNodePos(nodeId: string, side: string) {
     const node = data.nodes.find((n) => n.id === nodeId);
@@ -48,8 +54,7 @@ export default function AvgCanvasView() {
 
   return (
     <div
-      className="w-full h-full"
-      
+      className="w-full h-full overflow-visible"
       onDoubleClick={(e) => {
         dispatch(
           nodeAdded({
@@ -64,19 +69,21 @@ export default function AvgCanvasView() {
         );
       }}
     >
-      {data.nodes.map((node) => (
-        <AvgNodeView key={node.id} node={node} />
-      ))}
-      <svg className="w-full h-full">
-        <title>edges</title>
-        {edgesData.map((edge) => (
-          <path
-            key={edge.source.id + edge.target.id}
-            d={`M ${edge.source.x} ${edge.source.y} L ${edge.target.x} ${edge.target.y}`}
-            stroke="black"
-          />
+      <div className="overflow-visible">
+        {data.nodes.map((node) => (
+          <AvgNodeView key={node.id} node={node} />
         ))}
-      </svg>
+        <svg className="w-full h-full overflow-visible">
+          <title>edges</title>
+          {edgesData.map((edge) => (
+            <path
+              key={edge.source.id + edge.target.id}
+              d={`M ${edge.source.x} ${edge.source.y} L ${edge.target.x} ${edge.target.y}`}
+              stroke="black"
+            />
+          ))}
+        </svg>
+      </div>
     </div>
   );
 }

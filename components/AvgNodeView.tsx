@@ -1,4 +1,10 @@
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  MotionValue,
+  useMotionTemplate,
+  useMotionValue,
+} from "framer-motion";
 import { Icon } from "@iconify/react";
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import {
@@ -24,6 +30,11 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
       textArea.current.style.height = `${
         textArea.current.scrollHeight ?? 160
       }px`;
+      if (node) {
+        dispatch(
+          nodeModify({ id: node.id, height: textArea.current.scrollHeight })
+        );
+      }
     }
   }
   refreshHeight();
@@ -34,24 +45,44 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
     }
   }, [node]);
 
-  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-
+  const x = useMotionValue(node?.x ?? 0);
+  const y = useMotionValue(node?.y ?? 0);
+  const transform = useMotionTemplate`translate3d(${x}px, ${y}px, 0)`;
+  console.log("node", node);
   return (
     <motion.div
       className="relative flex justify-center"
+      drag
+      dragMomentum={false}
       style={{
         position: "absolute",
-        top: node?.y,
-        left: node?.x,
         width: node?.width,
         height: node?.height,
+        transform,
       }}
+      _dragX={x}
+      _dragY={y}
       onDoubleClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
         setEditMode(true);
       }}
+      onDrag={(e: MouseEvent, info) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (node) {
+          dispatch(
+            nodeModify({
+              id: node.id,
+              x: node.x + info.delta.x,
+              y: node.y + info.delta.y,
+            })
+          );
+        }
+      }}
+      // onDragEnd={(e: MouseEvent, info) => {
+
+      // }}
       onBlur={() => {
         setEditMode(false);
       }}
@@ -68,15 +99,15 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
             "cursor-grab select-none": !editMode,
           }
         )}
-        onMouseDown={(e) => {
-          if (e.buttons === 1 && node && !editMode) {
-            setMouseOffset({ x: e.clientX - node.x, y: e.clientY - node.y });
-            setIsDragging(true);
-          }
-        }}
-        onMouseUp={() => {
-          setIsDragging(false);
-        }}
+        // onMouseDown={(e) => {
+        //   if (e.buttons === 1 && node && !editMode) {
+        //     setMouseOffset({ x: e.clientX - node.x, y: e.clientY - node.y });
+        //     setIsDragging(true);
+        //   }
+        // }}
+        // onMouseUp={() => {
+        //   setIsDragging(false);
+        // }}
         // onMouseLeave={() => {
         //   setIsDragging(false);
         // }}
@@ -108,21 +139,21 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
             }
           }
         }}
-        onMouseMove={(e) => {
-          if (e.buttons === 1 && node) {
-            if (isDragging) {
-              const deltaX = e.clientX - mouseOffset.x;
-              const deltaY = e.clientY - mouseOffset.y;
-              dispatch(
-                nodeModify({
-                  id: node.id,
-                  x: deltaX,
-                  y: deltaY,
-                })
-              );
-            }
-          }
-        }}
+        // onMouseMove={(e) => {
+        //   if (e.buttons === 1 && node) {
+        //     if (isDragging) {
+        //       const deltaX = e.clientX - mouseOffset.x;
+        //       const deltaY = e.clientY - mouseOffset.y;
+        //       dispatch(
+        //         nodeModify({
+        //           id: node.id,
+        //           x: deltaX,
+        //           y: deltaY,
+        //         })
+        //       );
+        //     }
+        //   }
+        // }}
         onKeyUp={() => {
           refreshHeight();
         }}
