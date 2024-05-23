@@ -8,6 +8,7 @@ import {
 import { Icon } from "@iconify/react";
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import {
+  edgeAdded,
   nodeAdded,
   nodeModify,
   selectAvgCanvas,
@@ -19,7 +20,7 @@ import type AvgNode from "@/models/avg_nodes";
 import clsx from "clsx";
 
 export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
-  const [editMode, setEditMode] = useState(true);
+  const [editMode, setEditMode] = useState(node?.editing ?? false);
   const dispatch = useAppDispatch();
 
   const textArea = useRef<HTMLTextAreaElement>(null);
@@ -52,7 +53,7 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
   return (
     <motion.div
       className="relative flex justify-center"
-      drag
+      drag={!editMode}
       dragMomentum={false}
       style={{
         position: "absolute",
@@ -112,30 +113,47 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
         //   setIsDragging(false);
         // }}
         onKeyDown={(e) => {
-          if (node && !editMode) {
-            switch (e.key) {
-              case "Enter":
-                e.preventDefault();
-                e.stopPropagation();
-                setEditMode(false);
-                dispatch(
-                  nodeAdded({
-                    id: v1(),
-                    x: node.x,
-                    y: node.y + 100,
-                    text: "",
-                    type: "",
-                    height: 48,
-                    width: 128,
-                  })
-                );
-                break;
-              case "Escape":
-                e.preventDefault();
-                e.stopPropagation();
-                setEditMode(false);
+          if (node) {
+            if (editMode) {
+              switch (e.key) {
+                case "Escape":
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setEditMode(false);
 
-                break;
+                  break;
+              }
+            } else {
+              switch (e.key) {
+                case "Enter": {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setEditMode(false);
+                  const newId = v1();
+                  dispatch(
+                    nodeAdded({
+                      id: newId,
+                      x: node.x,
+                      y: node.y + 100,
+                      text: "",
+                      type: "",
+                      height: 48,
+                      width: 256,
+                      editing: true,
+                    })
+                  );
+                  dispatch(
+                    edgeAdded({
+                      id: v1(),
+                      fromNode: node.id,
+                      fromSide: "bottom",
+                      toNode: newId,
+                      toSide: "top",
+                    })
+                  );
+                  break;
+                }
+              }
             }
           }
         }}

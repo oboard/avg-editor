@@ -6,4 +6,5 @@ export default interface AvgNode {
   y: number;
   height: number;
   width: number;
+  editing: boolean;
 }
