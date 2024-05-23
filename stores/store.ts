@@ -1,6 +1,6 @@
 import type { I18nContent } from "@/components/LanguageSelector";
 import type AVGCanvas from "@/models/avg_canvas";
-import AvgEdge from "@/models/avg_edges";
+import type AvgEdge from "@/models/avg_edges";
 import type AvgNode from "@/models/avg_nodes";
 import {
   configureStore,
