@@ -70,6 +70,25 @@ const languageSlice = createSlice({
   },
 });
 
+const draggingEdgeSlice = createSlice({
+  name: "draggingEdge",
+  initialState: { draggingEdge: null as AvgEdge | null },
+  reducers: {
+    setDraggingEdge(state, action: PayloadAction<AvgEdge | null>) {
+      state.draggingEdge = action.payload;
+    },
+    modifyDraggingEdge(state, action) {
+      const edge = state.draggingEdge;
+      if (edge) {
+        Object.assign(edge, action.payload);
+      }
+    },
+    clearDraggingEdge(state) {
+      state.draggingEdge = null;
+    },
+  },
+});
+
 const selectionSlice = createSlice({
   name: "selection",
   initialState: { selected: [] as string[] },
@@ -98,6 +117,7 @@ const rootReducer = combineReducers({
   canvas: canvasSlice.reducer,
   selection: selectionSlice.reducer,
   language: languageSlice.reducer,
+  draggingEdge: draggingEdgeSlice.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -115,6 +135,8 @@ export const persistor = persistStore(store);
 export const selectAvgCanvas = (state: RootState) => state.canvas;
 export const selectLanguage = (state: RootState) => state.language.lang;
 export const selectSelected = (state: RootState) => state.selection.selected;
+export const selectDraggingEdge = (state: RootState) =>
+  state.draggingEdge.draggingEdge;
 
 export const {
   nodeModify,
@@ -126,4 +148,5 @@ export const {
 } = canvasSlice.actions;
 export const { select, deselect } = selectionSlice.actions;
 export const { setLanguage } = languageSlice.actions;
+export const { setDraggingEdge, modifyDraggingEdge, clearDraggingEdge } = draggingEdgeSlice.actions;
 export default canvasSlice.reducer;

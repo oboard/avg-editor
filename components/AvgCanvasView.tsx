@@ -71,16 +71,81 @@ export default function AvgCanvasView() {
     }
 
     // 计算起始点和结束点
-    const fromX = fromNode.x + fromNode.width / 2;
-    const fromY = fromNode.y + fromNode.height;
-    const toX = toNode ? toNode.x + toNode.width / 2 : edge.x;
-    const toY = toNode ? toNode.y : edge.y ?? 0;
+    // const fromX = fromNode.x + fromNode.width / 2;
+    // const fromY = fromNode.y + fromNode.height;
+    // const toX = toNode ? toNode.x + toNode.width / 2 : edge.x;
+    // const toY = toNode ? toNode.y : edge.y ?? 0;
+    // 根据edge.fromSide和edge.toSide计算起始点和结束点，top | left | bottom | right
+    const fromX =
+      edge.fromSide === "top" || edge.fromSide === "bottom"
+        ? fromNode.x + fromNode.width / 2
+        : edge.fromSide === "left"
+        ? fromNode.x
+        : fromNode.x + fromNode.width;
+    const fromY =
+      edge.fromSide === "top"
+        ? fromNode.y
+        : edge.fromSide === "bottom"
+        ? fromNode.y + fromNode.height
+        : edge.fromSide === "left" || edge.fromSide === "right"
+        ? fromNode.y + fromNode.height / 2
+        : 0;
+    const toX = toNode
+      ? edge.toSide === "top" || edge.toSide === "bottom"
+        ? toNode.x + toNode.width / 2
+        : edge.toSide === "left"
+        ? toNode.x
+        : toNode.x + toNode.width
+      : edge.x ?? 0;
+    const toY = toNode
+      ? edge.toSide === "top"
+        ? toNode.y
+        : edge.toSide === "bottom"
+        ? toNode.y + toNode.height
+        : edge.toSide === "left" || edge.toSide === "right"
+        ? toNode.y + toNode.height / 2
+        : 0
+      : edge.y ?? 0;
 
     // 根据连接边的方向计算控制点
-    const controlPoint1X = fromX;
-    const controlPoint1Y = fromY + (toY - fromY) / 2; // 垂直方向的中间点
-    const controlPoint2X = toX;
-    const controlPoint2Y = controlPoint1Y; // 水平方向的中间点
+    // const controlPoint1X = fromX;
+    // const controlPoint1Y = fromY + (toY - fromY) / 2; // 垂直方向的中间点
+    // const controlPoint2X = toX;
+    // const controlPoint2Y = controlPoint1Y; // 水平方向的中间点
+
+    const controlPoint1X =
+      edge.fromSide === "top" || edge.fromSide === "bottom"
+        ? fromX
+        : edge.fromSide === "left"
+        ? fromX + (toX - fromX) / 2
+        : fromX + (toX - fromX) / 2;
+    // 垂直方向的中间点
+
+    const controlPoint1Y =
+      edge.fromSide === "top"
+        ? fromY + (toY - fromY) / 2
+        : edge.fromSide === "bottom"
+        ? fromY + (toY - fromY) / 2
+        : edge.fromSide === "left" || edge.fromSide === "right"
+        ? fromY
+        : 0;
+
+    const controlPoint2X =
+      edge.toSide === "top" || edge.toSide === "bottom"
+        ? toX
+        : edge.toSide === "left"
+        ? toX + (fromX - toX) / 2
+        : toX + (fromX - toX) / 2;
+    // 水平方向的中间点
+
+    const controlPoint2Y =
+      edge.toSide === "top"
+        ? toY + (fromY - toY) / 2
+        : edge.toSide === "bottom"
+        ? toY + (fromY - toY) / 2
+        : edge.toSide === "left" || edge.toSide === "right"
+        ? toY
+        : 0;
 
     // 构建SVG路径命令
     const pathD = `M ${fromX} ${fromY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${toX} ${toY}`;

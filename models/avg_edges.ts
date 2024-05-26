@@ -3,7 +3,7 @@ export default interface AvgEdge {
   label?: string;
   fromNode: string;
   fromSide: "top" | "bottom" | "left" | "right";
-  toNode: string;
+  toNode?: string;
   toSide: "top" | "bottom" | "left" | "right";
 
   x?: number;

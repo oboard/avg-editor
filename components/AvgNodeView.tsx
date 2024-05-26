@@ -9,13 +9,18 @@ import {
 import { Icon } from "@iconify/react";
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import {
+  clearDraggingEdge,
   edgeAdded,
+  edgeDeleted,
   edgeModify,
+  modifyDraggingEdge,
   nodeAdded,
   nodeDeleted,
   nodeModify,
   selectAvgCanvas,
+  selectDraggingEdge,
   selectLanguage,
+  setDraggingEdge,
 } from "@/stores/store";
 import { v1 } from "uuid";
 import { type PointerEvent, useEffect, useRef, useState } from "react";
@@ -29,7 +34,8 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
 
   const textArea = useRef<HTMLTextAreaElement>(null);
 
-  const [dragingEdge, setDragingEdge] = useState<AvgEdge>();
+  // const [dragingEdge, setDragingEdge] = useState<AvgEdge>();
+  const dragingEdge = useAppSelector(selectDraggingEdge);
 
   function refreshHeight() {
     if (textArea.current) {
@@ -92,6 +98,36 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
       }}
       _dragX={x}
       _dragY={y}
+      onMouseMove={(e) => {
+        // 判断鼠标位置相对于node来说是top | left | right | bottom，然后修改边的方向
+        if (node && dragingEdge && dragingEdge.fromNode !== node.id) {
+          const deltaX = e.pageX - node.x;
+          const deltaY = e.pageY - node.y;
+          const side =
+            deltaX < node.width / 4
+              ? "left"
+              : deltaX > (node.width * 3) / 4
+              ? "right"
+              : deltaY < node.height / 4
+              ? "top"
+              : "bottom";
+          console.log(dragingEdge);
+          dispatch(
+            edgeModify({
+              id: dragingEdge.id,
+              toNode: node.id,
+              toSide: side,
+            })
+          );
+          dispatch(modifyDraggingEdge({ toNode: node.id, toSide: side }));
+        }
+      }}
+      onMouseLeave={() => {
+        if (dragingEdge) {
+          dispatch(edgeModify({ id: dragingEdge.id, toNode: null }));
+          dispatch(modifyDraggingEdge({ toNode: null }));
+        }
+      }}
       onDoubleClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -222,16 +258,15 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
               id: v1(),
               fromNode: node.id,
               fromSide: "bottom",
-              toNode: "",
-              toSide: "top",
               x: e.pageX,
               y: e.pageY,
+              toSide: "top",
             };
-            setDragingEdge(edge);
+            dispatch(setDraggingEdge(edge));
             dispatch(edgeAdded(edge));
           }
         }}
-        onPan={(e, info) => {
+        onPan={(e) => {
           if (dragingEdge) {
             dispatch(
               edgeModify({
@@ -240,6 +275,15 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
                 y: e.pageY,
               })
             );
+          }
+        }}
+        onPanEnd={(e, info) => {
+          if (dragingEdge) {
+            console.log(dragingEdge);
+            if (!dragingEdge.toNode) {
+              dispatch(edgeDeleted(dragingEdge.id));
+            }
+            dispatch(clearDraggingEdge());
           }
         }}
       />
