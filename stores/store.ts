@@ -8,7 +8,10 @@ import {
   type Action,
   createSlice,
   type PayloadAction,
+  combineReducers,
 } from "@reduxjs/toolkit";
+import { persistReducer, persistStore } from "redux-persist";
+import storage from "redux-persist/es/storage";
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;
@@ -35,6 +38,13 @@ const canvasSlice = createSlice({
     nodeAdded(state, action: PayloadAction<AvgNode>) {
       state.nodes.push(action.payload);
     },
+    nodeDeleted(state, action: PayloadAction<string>) {
+      state.nodes = state.nodes.filter((n) => n.id !== action.payload);
+      // 同时删除与该节点相关的边
+      state.edges = state.edges.filter(
+        (e) => e.fromNode !== action.payload && e.toNode !== action.payload
+      );
+    },
     edgeAdded(state, action: PayloadAction<AvgEdge>) {
       state.edges.push(action.payload);
     },
@@ -43,6 +53,9 @@ const canvasSlice = createSlice({
       if (edge) {
         Object.assign(edge, action.payload);
       }
+    },
+    edgeDeleted(state, action: PayloadAction<string>) {
+      state.edges = state.edges.filter((e) => e.id !== action.payload);
     },
   },
 });
@@ -72,20 +85,45 @@ const selectionSlice = createSlice({
   },
 });
 
-export const store = configureStore({
-  reducer: {
-    canvas: canvasSlice.reducer,
-    selection: selectionSlice.reducer,
-    language: languageSlice.reducer,
-  },
+// 持久化配置
+const persistConfig = {
+  key: "root",
+  storage,
+  // whitelist: [], // 需要持久化保存的模块，默认保存所有模块（语义：白名单）
+  // blacklist: [], // 不需要持久化保存的模块，默认不保存任何模块（语义：黑名单）
+};
+
+// 创建reducer(合并拆分的reducer)
+const rootReducer = combineReducers({
+  canvas: canvasSlice.reducer,
+  selection: selectionSlice.reducer,
+  language: languageSlice.reducer,
 });
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
+});
+
+export const persistor = persistStore(store);
 
 export const selectAvgCanvas = (state: RootState) => state.canvas;
 export const selectLanguage = (state: RootState) => state.language.lang;
 export const selectSelected = (state: RootState) => state.selection.selected;
 
-export const { nodeModify, nodeAdded, edgeAdded, edgeModify } =
-  canvasSlice.actions;
+export const {
+  nodeModify,
+  nodeAdded,
+  edgeAdded,
+  edgeModify,
+  nodeDeleted,
+  edgeDeleted,
+} = canvasSlice.actions;
 export const { select, deselect } = selectionSlice.actions;
 export const { setLanguage } = languageSlice.actions;
 export default canvasSlice.reducer;

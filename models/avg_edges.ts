@@ -5,4 +5,7 @@ export default interface AvgEdge {
   fromSide: "top" | "bottom" | "left" | "right";
   toNode: string;
   toSide: "top" | "bottom" | "left" | "right";
+
+  x?: number;
+  y?: number;
 }

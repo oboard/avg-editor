@@ -66,15 +66,15 @@ export default function AvgCanvasView() {
     const fromNode = data.nodes.find((node) => node.id === edge.fromNode);
     const toNode = data.nodes.find((node) => node.id === edge.toNode);
 
-    if (!fromNode || !toNode) {
+    if (!fromNode) {
       return "";
     }
 
     // 计算起始点和结束点
     const fromX = fromNode.x + fromNode.width / 2;
     const fromY = fromNode.y + fromNode.height;
-    const toX = toNode.x + toNode.width / 2;
-    const toY = toNode.y;
+    const toX = toNode ? toNode.x + toNode.width / 2 : edge.x;
+    const toY = toNode ? toNode.y : edge.y ?? 0;
 
     // 根据连接边的方向计算控制点
     const controlPoint1X = fromX;
@@ -94,8 +94,8 @@ export default function AvgCanvasView() {
       onDoubleClick={(e) => {
         dispatch(
           nodeAdded({
-            x: Math.round(e.clientX - 128),
-            y: Math.round(e.clientY - 24),
+            x: Math.round(e.pageX - 128),
+            y: Math.round(e.pageY - 24),
             id: v1(),
             type: "say",
             text: "",

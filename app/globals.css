@@ -11,3 +11,23 @@
 body {
   margin: 0;
 }
+
+.drag-ball {
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  bottom: -10px;
+  transition: all 0.2s ease-in-out;
+  scale: 0.5;
+}
+
+div:hover>.drag-ball {
+  background-color: white;
+  border: 1px solid black;
+  scale: 1;
+}
+
+.drag-ball:hover {
+  scale: 1.2;
+}
