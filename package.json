@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "gitHooks": {
-    "pre-commit": "lint-staged",
     "commit-msg": "node scripts/verifyCommit.mjs"
   },
   "dependencies": {

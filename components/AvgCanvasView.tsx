@@ -108,37 +108,23 @@ export default function AvgCanvasView() {
       : edge.y ?? 0;
 
     // 根据连接边的方向计算控制点
-    // const controlPoint1X = fromX;
-    // const controlPoint1Y = fromY + (toY - fromY) / 2; // 垂直方向的中间点
-    // const controlPoint2X = toX;
-    // const controlPoint2Y = controlPoint1Y; // 水平方向的中间点
     const controlPoint1X =
-    edge.fromSide === "top" || edge.fromSide === "bottom"
-      ? fromX
-      : edge.fromSide === "left" || edge.fromSide === "right"
-      ? fromX + (toX - fromX) / 2
-      : fromX + (toX - fromX) * 0.25; // 当fromSide是left或right时，控制点更靠近fromX
-  
-  const controlPoint1Y =
-    edge.fromSide === "top" || edge.fromSide === "bottom"
-      ? fromY + (toY - fromY) / 2
-      : edge.fromSide === "left" || edge.fromSide === "right"
-      ? fromY
-      : fromY + (toY - fromY) * 0.25; // 当fromSide是left或right时，控制点更靠近fromY
-  
-  const controlPoint2X =
-    edge.toSide === "top" || edge.toSide === "bottom"
-      ? toX
-      : edge.toSide === "left" || edge.toSide === "right"
-      ? toX + (fromX - toX) / 2
-      : toX + (fromX - toX) * 0.25; // 当toSide是left或right时，控制点更靠近toX
-  
-  const controlPoint2Y =
-    edge.toSide === "top" || edge.toSide === "bottom"
-      ? toY + (fromY - toY) / 2
-      : edge.toSide === "left" || edge.toSide === "right"
-      ? toY
-      : toY + (fromY - toY) * 0.25; // 当toSide是left或right时，控制点更靠近toY
+      fromX +
+      (edge.fromSide === "left" ? 128 : edge.fromSide === "right" ? -128 : 0);
+    const controlPoint1Y =
+      edge.fromSide === "left" || edge.fromSide === "right"
+        ? fromY
+        : edge.fromSide === "bottom"
+        ? fromY + 128
+        : fromY - 128;
+    const controlPoint2X =
+      toX + (edge.toSide === "left" ? -128 : edge.toSide === "right" ? 128 : 0);
+    const controlPoint2Y =
+      edge.toSide === "left" || edge.toSide === "right"
+        ? toY
+        : edge.toSide === "bottom"
+        ? toY + 128
+        : toY - 128;
 
     // 构建SVG路径命令
     const pathD = `M ${fromX} ${fromY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${toX} ${toY}`;
@@ -186,19 +172,19 @@ export default function AvgCanvasView() {
         <svg className="absolute z-2 w-full h-full overflow-visible">
           <title>edges</title>
 
-          {/* <defs>
+          <defs>
             <marker
               id="arrowhead"
-              markerWidth="10"
+              markerWidth="7"
               markerHeight="7"
-              refX="0"
+              refX="7"
               refY="3.5"
               orient="auto"
               markerUnits="strokeWidth"
             >
-              <path d="M0,0 L0,7 L10,3.5 Z" fill="black" />
+              <path d="M0,0 L0,7 L7,3.5 Z" fill="black" />
             </marker>
-          </defs> */}
+          </defs>
           {data.edges.map((edge) => (
             <path
               key={edge.id}
@@ -206,6 +192,7 @@ export default function AvgCanvasView() {
               stroke="black"
               fill="none"
               stroke-width="2"
+              marker-end="url(#arrowhead)"
             />
           ))}
         </svg>

@@ -9,6 +9,7 @@ import {
 import { Icon } from "@iconify/react";
 import { useAppDispatch, useAppSelector } from "@/stores/hooks";
 import {
+  cleanUnusedEdges,
   clearDraggingEdge,
   edgeAdded,
   edgeDeleted,
@@ -20,7 +21,7 @@ import {
   selectAvgCanvas,
   selectDraggingEdge,
   selectLanguage,
-  setDraggingEdge,
+  startDraggingEdge,
 } from "@/stores/store";
 import { v1 } from "uuid";
 import { type PointerEvent, useEffect, useRef, useState } from "react";
@@ -124,8 +125,26 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
       }}
       onMouseLeave={() => {
         if (dragingEdge) {
-          dispatch(edgeModify({ id: dragingEdge.id, toNode: null }));
-          dispatch(modifyDraggingEdge({ toNode: null }));
+          const leaveProps = {
+            toNode: null,
+            toSide: {
+              left: "right",
+              right: "left",
+              top: "bottom",
+              bottom: "top",
+            }[dragingEdge.fromSide],
+          };
+          dispatch(
+            edgeModify({
+              id: dragingEdge.id,
+              ...leaveProps,
+            })
+          );
+          dispatch(
+            modifyDraggingEdge({
+              ...leaveProps,
+            })
+          );
         }
       }}
       onDoubleClick={(e) => {
@@ -156,99 +175,102 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
       animate={{ opacity: 1, scale: 1 }}
       {...props}
     >
-      <textarea
-        ref={textArea}
-        readOnly={!editMode}
-        onPointerDown={startDrag}
-        className={clsx(
-          "textarea textarea-bordered w-64 focus-visible:outline-offset-0 rounded overflow-hidden resize-none",
-          {
-            "cursor-grab select-none": !editMode,
-          }
-        )}
-        // onMouseDown={(e) => {
-        //   if (e.buttons === 1 && node && !editMode) {
-        //     setMouseOffset({ x: e.clientX - node.x, y: e.clientY - node.y });
-        //     setIsDragging(true);
-        //   }
-        // }}
-        // onMouseUp={() => {
-        //   setIsDragging(false);
-        // }}
-        // onMouseLeave={() => {
-        //   setIsDragging(false);
-        // }}
-        onKeyDown={(e) => {
-          if (node) {
-            if (editMode) {
-              switch (e.key) {
-                case "Escape":
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setEditMode(false);
+      {!editMode ? (
+        <button
+          type="button"
+          onPointerDown={startDrag}
+          className="textarea whitespace-pre-wrap text-start textarea-bordered w-full cursor-grab unselectable focus-visible:outline-offset-0 rounded overflow-hidden resize-none"
+        >
+          {node?.text}
+        </button>
+      ) : (
+        <textarea
+          ref={textArea}
+          className="textarea textarea-bordered w-full focus-visible:outline-offset-0 rounded overflow-hidden resize-none"
+          // onMouseDown={(e) => {
+          //   if (e.buttons === 1 && node && !editMode) {
+          //     setMouseOffset({ x: e.clientX - node.x, y: e.clientY - node.y });
+          //     setIsDragging(true);
+          //   }
+          // }}
+          // onMouseUp={() => {
+          //   setIsDragging(false);
+          // }}
+          // onMouseLeave={() => {
+          //   setIsDragging(false);
+          // }}
+          onKeyDown={(e) => {
+            if (node) {
+              if (editMode) {
+                switch (e.key) {
+                  case "Escape":
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setEditMode(false);
 
-                  break;
-              }
-            } else {
-              switch (e.key) {
-                case "Enter": {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setEditMode(false);
-                  const newId = v1();
-                  dispatch(
-                    nodeAdded({
-                      id: newId,
-                      x: node.x,
-                      y: node.y + 100,
-                      text: "",
-                      type: "",
-                      height: 48,
-                      width: 256,
-                      editing: true,
-                    })
-                  );
-                  dispatch(
-                    edgeAdded({
-                      id: v1(),
-                      fromNode: node.id,
-                      fromSide: "bottom",
-                      toNode: newId,
-                      toSide: "top",
-                    })
-                  );
-                  break;
+                    break;
+                }
+              } else {
+                switch (e.key) {
+                  case "Enter": {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setEditMode(false);
+                    const newId = v1();
+                    dispatch(
+                      nodeAdded({
+                        id: newId,
+                        x: node.x,
+                        y: node.y + 100,
+                        text: "",
+                        type: "",
+                        height: 48,
+                        width: 256,
+                        editing: true,
+                      })
+                    );
+                    dispatch(
+                      edgeAdded({
+                        id: v1(),
+                        fromNode: node.id,
+                        fromSide: "bottom",
+                        toNode: newId,
+                        toSide: "top",
+                      })
+                    );
+                    break;
+                  }
                 }
               }
             }
-          }
-        }}
-        // onMouseMove={(e) => {
-        //   if (e.buttons === 1 && node) {
-        //     if (isDragging) {
-        //       const deltaX = e.clientX - mouseOffset.x;
-        //       const deltaY = e.clientY - mouseOffset.y;
-        //       dispatch(
-        //         nodeModify({
-        //           id: node.id,
-        //           x: deltaX,
-        //           y: deltaY,
-        //         })
-        //       );
-        //     }
-        //   }
-        // }}
-        onKeyUp={() => {
-          refreshHeight();
-        }}
-        value={node?.text}
-        onChange={(e) => {
-          if (node) {
-            // node.text = e.target.value;
-            dispatch(nodeModify({ id: node.id, text: e.target.value }));
-          }
-        }}
-      />
+          }}
+          // onMouseMove={(e) => {
+          //   if (e.buttons === 1 && node) {
+          //     if (isDragging) {
+          //       const deltaX = e.clientX - mouseOffset.x;
+          //       const deltaY = e.clientY - mouseOffset.y;
+          //       dispatch(
+          //         nodeModify({
+          //           id: node.id,
+          //           x: deltaX,
+          //           y: deltaY,
+          //         })
+          //       );
+          //     }
+          //   }
+          // }}
+          onKeyUp={() => {
+            refreshHeight();
+          }}
+          value={node?.text}
+          onChange={(e) => {
+            if (node) {
+              // node.text = e.target.value;
+              dispatch(nodeModify({ id: node.id, text: e.target.value }));
+            }
+          }}
+        />
+      )}
       {/* move */}
       <motion.div
         className="drag-ball"
@@ -262,7 +284,7 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
               y: e.pageY,
               toSide: "top",
             };
-            dispatch(setDraggingEdge(edge));
+            dispatch(startDraggingEdge(edge));
             dispatch(edgeAdded(edge));
           }
         }}
@@ -279,11 +301,8 @@ export default function AvgNodeView({ node, ...props }: { node?: AvgNode }) {
         }}
         onPanEnd={(e, info) => {
           if (dragingEdge) {
-            console.log(dragingEdge);
-            if (!dragingEdge.toNode) {
-              dispatch(edgeDeleted(dragingEdge.id));
-            }
             dispatch(clearDraggingEdge());
+            dispatch(cleanUnusedEdges());
           }
         }}
       />

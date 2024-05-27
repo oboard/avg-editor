@@ -57,6 +57,13 @@ const canvasSlice = createSlice({
     edgeDeleted(state, action: PayloadAction<string>) {
       state.edges = state.edges.filter((e) => e.id !== action.payload);
     },
+    cleanUnusedEdges(state) {
+      state.edges = state.edges.filter(
+        (e) =>
+          state.nodes.some((n) => n.id === e.fromNode) &&
+          state.nodes.some((n) => n.id === e.toNode)
+      );
+    },
   },
 });
 
@@ -74,7 +81,7 @@ const draggingEdgeSlice = createSlice({
   name: "draggingEdge",
   initialState: { draggingEdge: null as AvgEdge | null },
   reducers: {
-    setDraggingEdge(state, action: PayloadAction<AvgEdge | null>) {
+    startDraggingEdge(state, action: PayloadAction<AvgEdge | null>) {
       state.draggingEdge = action.payload;
     },
     modifyDraggingEdge(state, action) {
@@ -145,8 +152,9 @@ export const {
   edgeModify,
   nodeDeleted,
   edgeDeleted,
+  cleanUnusedEdges,
 } = canvasSlice.actions;
 export const { select, deselect } = selectionSlice.actions;
 export const { setLanguage } = languageSlice.actions;
-export const { setDraggingEdge, modifyDraggingEdge, clearDraggingEdge } = draggingEdgeSlice.actions;
+export const { startDraggingEdge, modifyDraggingEdge, clearDraggingEdge } = draggingEdgeSlice.actions;
 export default canvasSlice.reducer;
